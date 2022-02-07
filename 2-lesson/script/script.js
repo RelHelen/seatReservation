@@ -13,13 +13,14 @@ const init = (slectorApp, title) => {
   firstForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const forms = getFormPerson(firstForm.count.value);
+    const numPerson = firstForm.count.value;
     console.log('forms: ', forms);
     firstForm.remove();
     main.append(...forms);
     // ... это спред оператор , позволяет передать через запятую
 
     //готовим самолет
-    readyPlane(forms, main);
+    readyPlane(forms, main, numPerson);
   });
 };
 init('.app', 'Выберите тур');
