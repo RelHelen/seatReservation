@@ -1,5 +1,5 @@
 import createMyElement from './createElement.js';
-
+import declOfNum from './number.js';
 const createCockpit = (title) => {
   //div class="cockpit"
   const cockpit = createMyElement('div', {
@@ -69,7 +69,11 @@ const creatBlockSeat = (n, count) => {
   return fuselage;
 };
 //создает самолет и возвращает его
-const creatAirplane = (title, scheme) => {
+//const creatAirplane = (title, scheme)
+const creatAirplane = (title, tourData) => {
+  const scheme = tourData.scheme;
+  console.log('scheme: ', scheme);
+
   //form class="choises-seat"
   const choisesSeat = createMyElement('form', {
     className: 'choises-seat',
@@ -106,12 +110,63 @@ const creatAirplane = (title, scheme) => {
   return choisesSeat;
 };
 
-//начальные парметрысамолета и вызов функции построения самолета
-const airPlane = (main, data, numPerson) => {
-  const title = `Выберите места ${numPerson}`;
-  //схема самолета: запасной выход, 11 рядов , запасной выход, 1ряд, запасной выход, 17 рядов,запасной выход,
-  const scheme = ['exit', 11, 'exit', 1, 'exit', 17, 'exit'];
+//создадим возможность бронирования столько мест, сколько едит пассажиров data.length
+const checkSeat = (form, data) => {
+  // выбираем место
+  form.addEventListener('change', () => {
+    const formData = new FormData(form); //коллекция  элементов
 
-  main.append(creatAirplane(title, scheme));
+    //const checked = [...formData].map((item) => {
+    const checked = [...formData].map(([key, value]) => {
+      console.log('formData.item.value: ', value);
+      return value;
+    });
+    //если выбрали столько мест сколько пассажиров
+    //остальных блокируем
+    if (data.length === checked.length) {
+      [...form].forEach((item) => {
+        if (item.checked === false && item.name === 'seat') {
+          item.disabled = true;
+        }
+      });
+    } else {
+      [...form].forEach((item) => {
+        if (item.checked === false && item.name === 'seat') {
+          item.disabled = false; //или разблокируем
+        }
+      });
+    }
+  });
+
+  // отправка данных
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const booking = [...formData].map(([key, value]) => {
+      return value;
+    });
+    for (let i = 0; i < data.length; i++) {
+      data[i].seat = booking[i];
+    }
+    console.log('data.seat=booking: ', data);
+  });
+};
+//начальные парметры самолета и вызов функции построения самолета
+const airPlane = (main, data, tourData) => {
+  // склоняем слово место и число
+  const title = ` Выберите ${declOfNum(data.length, [
+    'место',
+    'места',
+    'мест',
+  ])}  `;
+
+  //схема самолета: запасной выход, 11 рядов , запасной выход, 1ряд, запасной выход, 17 рядов,запасной выход,
+  //const scheme = ['exit', 11, 'exit', 1, 'exit', 17, 'exit'];
+  const choiseForm = creatAirplane(title, tourData);
+
+  //создадим возможность бронирования столько мест, сколько едит пассажиров data.length
+  checkSeat(choiseForm, data);
+  // main.append(creatAirplane(title, scheme));
+  main.append(choiseForm);
 };
 export default airPlane;

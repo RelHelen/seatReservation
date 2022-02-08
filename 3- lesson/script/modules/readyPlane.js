@@ -1,6 +1,6 @@
 import airPlane from './airPlane.js';
 //создаем самолет
-const readyPlane = (forms, main, numPerson) => {
+const readyPlane = (forms, main, tourData) => {
   const data = [];
   //из массива forms будем получать парметры, методом перебоа
   //на каждую forms навешать событие
@@ -22,7 +22,7 @@ const readyPlane = (forms, main, numPerson) => {
       if (forms.length === data.length) {
         forms.forEach((form) => form.remove());
         //появляется самолет
-        airPlane(main, data, numPerson);
+        airPlane(main, data, tourData);
       }
     });
   });
