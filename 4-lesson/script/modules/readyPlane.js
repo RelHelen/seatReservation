@@ -17,7 +17,7 @@ const readyPlane = (forms, main, tourData) => {
         name: form.name.value,
         ticket: form.ticket.value,
       });
-      console.log('data: ', data);
+      console.log('readyPlane data: ', data);
       //когда совпадет количество форм и количество заполненых массивов
       if (forms.length === data.length) {
         forms.forEach((form) => form.remove());

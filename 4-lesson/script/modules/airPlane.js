@@ -1,5 +1,8 @@
+import { setStorage, getStorage } from '../service/storage.js';
 import createMyElement from './createElement.js';
 import declOfNum from './number.js';
+
+// *создание шапки самолета
 const createCockpit = (title) => {
   //div class="cockpit"
   const cockpit = createMyElement('div', {
@@ -19,7 +22,8 @@ const createCockpit = (title) => {
   cockpit.append(cockpitTitle, cockpitButton);
   return cockpit;
 };
-//создание запасного выхода 'exit'
+
+// *создание запасного выхода 'exit'
 const createExit = () => {
   //<div class="exit fuselage"></div>
   const fuselage = createMyElement('div', {
@@ -28,8 +32,8 @@ const createExit = () => {
   return fuselage;
 };
 
-//создаем ряды стульев
-const creatBlockSeat = (n, count) => {
+// *создаем ряды стульев
+const creatBlockSeat = (n, count, bookingSeat) => {
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   //<ol class="fuselage">
@@ -53,10 +57,12 @@ const creatBlockSeat = (n, count) => {
       const wrapperCheck = createMyElement('label');
 
       // <input name="seat" type="checkbox" value="1A" />
+      const seatValue = `${i}${letter}`;
       const check = createMyElement('input', {
         name: 'seat',
         type: 'checkbox',
-        value: `${i}${letter}`,
+        value: seatValue,
+        disabled: bookingSeat.includes(seatValue),
       });
       wrapperCheck.append(check);
       seat.append(wrapperCheck);
@@ -68,11 +74,16 @@ const creatBlockSeat = (n, count) => {
   }
   return fuselage;
 };
-//создает самолет и возвращает его
-//const creatAirplane = (title, scheme)
+
+// *создает самолет и возвращает его
+// -- const creatAirplane = (title, scheme)
 const creatAirplane = (title, tourData) => {
   const scheme = tourData.scheme;
   console.log('scheme: ', scheme);
+
+  //получим забраннированные места
+  const bookingSeat = getStorage(tourData.id).map((item) => item.seat);
+  console.log('bookingSeat storage: ', bookingSeat);
 
   //form class="choises-seat"
   const choisesSeat = createMyElement('form', {
@@ -97,7 +108,7 @@ const creatAirplane = (title, tourData) => {
     }
     //создаем блок сиденьев
     if (typeof type === 'number') {
-      const blockSeat = creatBlockSeat(n, type);
+      const blockSeat = creatBlockSeat(n, type, bookingSeat);
       n = n + type;
       return blockSeat;
     }
@@ -110,8 +121,9 @@ const creatAirplane = (title, tourData) => {
   return choisesSeat;
 };
 
-//создадим возможность бронирования столько мест, сколько едит пассажиров data.length
-const checkSeat = (form, data) => {
+// *создадим возможность бронирования столько мест, сколько едит пассажиров data.length
+const checkSeat = (form, data, id) => {
+  const bookingSeat = getStorage(id).map((item) => item.seat); //получаем места, которые заняты
   // выбираем место
   form.addEventListener('change', () => {
     const formData = new FormData(form); //коллекция  элементов
@@ -126,19 +138,23 @@ const checkSeat = (form, data) => {
     if (data.length === checked.length) {
       [...form].forEach((item) => {
         if (item.checked === false && item.name === 'seat') {
-          item.disabled = true;
+          item.disabled = true; //заблокировать
         }
       });
     } else {
       [...form].forEach((item) => {
-        if (item.checked === false && item.name === 'seat') {
+        if (
+          !bookingSeat.includes(item.value) &&
+          item.checked === false &&
+          item.name === 'seat'
+        ) {
           item.disabled = false; //или разблокируем
         }
       });
     }
   });
 
-  // отправка данных
+  // отправка данных (выбранных мест)
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(form);
@@ -149,9 +165,21 @@ const checkSeat = (form, data) => {
       data[i].seat = booking[i];
     }
     console.log('data.seat=booking: ', data);
+
+    //отправляем данные в storage
+    setStorage(id, data);
+
+    form.remove();
+    document.body.innerHTML = `
+    <h1 class="title">Хорошего отдыха</h1>
+    <h2 class="title">Ваши места: ${
+      booking.length === 1 ? `Ваше место ${booking}` : `Ваше места ${booking}`
+    }</h2>
+  `;
   });
 };
-//начальные парметры самолета и вызов функции построения самолета
+
+// *начальные парметры самолета и вызов функции построения самолета
 const airPlane = (main, data, tourData) => {
   // склоняем слово место и число
   const title = ` Выберите ${declOfNum(data.length, [
@@ -165,7 +193,7 @@ const airPlane = (main, data, tourData) => {
   const choiseForm = creatAirplane(title, tourData);
 
   //создадим возможность бронирования столько мест, сколько едит пассажиров data.length
-  checkSeat(choiseForm, data);
+  checkSeat(choiseForm, data, tourData.id);
   // main.append(creatAirplane(title, scheme));
   main.append(choiseForm);
 };
